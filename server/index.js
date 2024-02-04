@@ -21,16 +21,14 @@ app.post('/api/upload', (req, res) => {
     let r1 = Math.floor(Math.random() * 99999)
     let r2 = Math.floor(Math.random() * 99999)
 
-    fileName[0] = r1 + '-' + r2
+    fileName[0] = r1 + '-' + r2 // edit a filename 12345-67890
+    // fileName = ['12345-67890','jpg']
+
     let newName = fileName.join('.')
     let target = 'public/images/' + newName
 
     fs.rename(upfile.filepath, target, (e) => {
-      console.log({
-        imgSrc: 'images/' + newName,
-        desrc: fields.description,
-      })
-      res.json({ imgSrc: 'images/' + newName, desrc: fields.description })
+      res.json({ imgSrc: `images/${newName}`, desrc: fields.description[0] })
     })
   })
 })
