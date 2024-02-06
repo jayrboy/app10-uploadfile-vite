@@ -92,3 +92,55 @@ app.post('/api/upload', (req, res, next) => {
   })
 })
 ```
+
+#### Cookie
+
+```sh
+npm install cookie-parse  # server
+```
+
+```js
+import cookieParser from 'cookie-parse'
+
+app.use(cookieParser()) // การใช้งาน
+```
+
+1. การจัดเก็บข้อมูลแบบ Cookie (หมดอายุใน 30 วัน)
+
+```js
+let time = 60 * 60 * 1000 * 24 * 30 // millisecond
+response.cookie('example', 555, { maxAge: time })
+```
+
+2. การอ่านข้อมูลจาก Cookie (ถ้าไม่มีค่า จะให้เป็นค่าว่าง)
+
+```js
+let firstname = request.cookies.firstname || ''
+```
+
+- กรณี error
+
+```js
+response.cookie('example', '5555')
+let text = request.cookies.example // Error เพราะข้อมูลยังไม่ถูกส่งไปยัง Browser
+```
+
+3. การลบ Cookie
+
+- แม้ระบุชื่อคุกกี้ที่ไม่มีอยู่จริง ก็จะไม่เกิดข้อผิดพลาด ดังนั้น จึงไม่จำเป็นต้องตรวจสอบก่อนการลบ
+
+```js
+response.clearCookie('login')
+response.clearCookie('password')
+```
+
+- คุกกี้จะถูกลบ หลังจากที่เราส่งผลตอบสนอง
+  - res.send()
+  - res.json()
+  - res.end()
+
+# การใช้งาน Cookies
+
+- รับข้อมูล Email (login) และ Password จากผู้ใช้
+- พร้อมกับตัวเลือก (checkbox) ว่าจะบันทึกข้อมูลคุกกี้ไว้ในเครื่องหรือไม่
+- เลือก (checkbox) บันทึก เมื่อเปิดมาครั้งต่อไป ค่า email และ password จาก cookies มาใส่ลงในช่องรับข้อมูลไว้ล่วงหน้า

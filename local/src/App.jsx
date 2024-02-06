@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
+import Cookie from './Cookie'
 
 function App() {
   const [imgSrc, setImgSrc] = useState('')
@@ -68,6 +69,8 @@ function App() {
         <br />
         <p>{desrc}</p>
       </div>
+      <br />
+      <Cookie />
     </>
   )
 }
