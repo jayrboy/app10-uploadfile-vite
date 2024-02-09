@@ -3,6 +3,7 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import Cookie from './Cookie'
+import Session from './Session'
 
 function App() {
   const [imgSrc, setImgSrc] = useState('')
@@ -71,6 +72,8 @@ function App() {
       </div>
       <br />
       <Cookie />
+      <br />
+      <Session />
     </>
   )
 }

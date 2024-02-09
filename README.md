@@ -144,3 +144,199 @@ response.clearCookie('password')
 - รับข้อมูล Email (login) และ Password จากผู้ใช้
 - พร้อมกับตัวเลือก (checkbox) ว่าจะบันทึกข้อมูลคุกกี้ไว้ในเครื่องหรือไม่
 - เลือก (checkbox) บันทึก เมื่อเปิดมาครั้งต่อไป ค่า email และ password จาก cookies มาใส่ลงในช่องรับข้อมูลไว้ล่วงหน้า
+
+#### Session
+
+```sh
+npm install express-session  # server
+```
+
+```js
+import session from 'express-session'
+// การใช้งาน
+app.use(
+  session({
+    secret: 'reactrestapi', // กำหนด string อะไรก็ได้สำหรับเป็น key สร้าง Session ID
+    resave: false,
+    saveUninitialized: false,
+  })
+)
+```
+
+1. การจัดเก็บข้อมูลแบบ Session
+
+```js
+request.session.code = 12345
+request.session['email'] = 'test@example.com'
+request.session.colors = ['red', 'green', 'blue']
+request.session.countries = { th: 'Thailand', jp: 'Japan', kr: 'Korea' }
+
+request.session.cookie.maxAge = 30 * 60 * 1000 // หมดอายุใน 30 นาที
+request.session.cookie.maxAge = 60 * 60 * 1000 * 24 // หมดอายุใน 1 วัน
+```
+
+2. การอ่านค่า Session
+
+```js
+let id = ''
+if (request.session.id) {
+  // != undefined
+  id = request.session.id
+}
+
+// เขียนแบบสั้น
+let password = request.session.password || ''
+
+let colors = request.session.numbers || []
+for (n of colors) {
+}
+
+let countries = request.session.countries || {}
+for (c of countries) {
+}
+```
+
+3. การลบข้อมูล Session (เมื่อออกจากระบบ)
+
+```js
+app.get('/api/session/delete', (request, response) => {
+  request.session.destroy((err) => {
+    if (err) {
+      response.send(error)
+    } else {
+      response.json({ signedIn: false })
+    }
+  })
+})
+```
+
+# การใช้งาน Session
+
+- server
+  - รับข้อมูล Email (Login) และ Password จากผู้ใช้
+  - เมื่อส่งขึ้น หากกำหนดค่าได้ถูกต้อง จะนำไปเก็บไว้ใน session เพื่อตรวจสอบในภายหลัง
+- local
+  - หากเข้าสู่ระบบแล้ว ก็จะเปลี่ยนไปแสดงผลด้วย Component อีกอันหนึ่ง
+  - แต่ถ้ายังไม่เข้าสู่ระบบ ก็จะแสดงฟอร์มเพื่อรับค่า email และ password
+
+# GET สำหรับตรวจสอบว่ามีข้อมูลจัดเก็บใน Session หรือไม่
+
+1. server (index.js)
+
+```js
+app.get('/api/session/get', (req, res) => {
+  // ตรวจสอบว่ามีข้อมูลจัดเก็บไว้ใน sessions หรือไม่
+  let s = req.session.email ? true : false
+  res.json({ signedIn: s })
+})
+```
+
+2. local (Session.jsx)
+
+```js
+let [signedIn, setSignedIn] = useState(false)
+
+useEffect(() => {
+  fetch('/api/session/get')
+    .then((res) => res.json())
+    .then((result) => setSignedIn(result.signedIn))
+    .catch((err) => alert(err.message))
+}, [])
+```
+
+# POST
+
+1. server (index.js)
+
+```js
+app.post('/api/session/set', (req, res) => {
+  // ถ้าส่งข้อมูลมาจาก form เข้ามา ตรวจสอบแค่ password
+  // โดย password ถูกต้อง ก็ให้เก็บค่า email ไว้ใน session เพื่อตรวจสอบในภายหลัง
+  // แล้วส่งค่ากลับไปว่าได้เข้าสู่ระบบแล้ว
+  let email = req.body.email || ''
+  let password = req.body.password || ''
+  if (password === '1234') {
+    req.session['email'] = email
+    res.json({ signedIn: true })
+  } else {
+    res.json({ signedIn: false })
+  }
+})
+```
+
+2. local (Session.jsx)
+
+```js
+const form = useRef()
+
+const onSubmitForm = (event) => {
+  event.preventDefault()
+  const formData = new FormData(form.current)
+  const formEnt = Object.fromEntries(formData.entries())
+
+  fetch('/api/session/set', {
+    method: 'POST',
+    body: JSON.stringify(formEnt),
+    headers: { 'Content-Type': 'application/json' },
+  })
+    .then((res) => res.json())
+    .then((result) => {
+      if (result.signedIn) {
+        setSignedIn(result.signedIn)
+      } else {
+        alert('Email หรือ Password ไม่ถูกต้อง')
+      }
+    })
+    .catch((err) => alert(err))
+}
+
+// ถ้าไม่เข้าสู่ระบบ ให้แสดง form
+if (!signedIn) {
+  return (
+    <div>
+      <form onSubmit={onSubmitForm} ref={form}>
+        <input type="email" name="email" placeholder="Email" /> <br />
+        <input type="password" name="password" placeholder="Password: 1234" />
+        <br />
+        <br />
+        <button>ส่งข้อมูล</button>
+      </form>
+    </div>
+  )
+} else {
+  return <SessionSignedIn />
+}
+```
+
+# GET สำหรับการลบข้อมูลใน session เพื่อออกจากระบบ
+
+1. server (index.js)
+
+```js
+app.get('/api/session/delete', (req, res) => {
+  req.session.destroy((err) => {
+    res.json({ signedIn: false })
+  })
+})
+```
+
+2. local (SessionSignedIn.jsx)
+
+```js
+const onClickLink = (event) => {
+  event.preventDefault()
+  fetch('/api/session/delete')
+    .then((res) => res.text())
+    .then((result) => (window.location.href = '/'))
+    .catch((err) => alert(err))
+}
+return (
+  <div>
+    <h1>ท่านได้เข้าสู่ระบบแล้ว</h1>
+    <br />
+    <a href={''} onClick={(e) => onClickLink(e)}>
+      ออกจากระบบ
+    </a>
+  </div>
+)
+```
