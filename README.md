@@ -96,7 +96,7 @@ app.post('/api/upload', (req, res, next) => {
 #### Cookie
 
 ```sh
-npm install cookie-parse  # server
+npm install cookie-parser  # server
 ```
 
 ```js
